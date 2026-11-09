@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><link rel="stylesheet" href="style.css">
+<style>
+  .row { display: grid; grid-template-columns: 1fr 48px 1fr 48px 1fr 48px 1fr; align-items: stretch; }
+  .row .box { min-height: 300px; }
+  .out { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .out span { background: #fff; border-radius: 9px; padding: 4px 12px; font-size: 15px; font-weight: 700; color: var(--rose); }
+  .tools { margin-top: 30px; display: grid; grid-template-columns: 1fr 48px 1fr 48px 1fr 48px 1fr; }
+  .tools div { text-align: center; font-size: 16px; color: var(--muted); }
+  .tools div:nth-child(even) { visibility: hidden; }
+</style></head>
+<body><div class="canvas">
+  <h1>从一段视频到一个三维网格</h1>
+  <div class="sub">MILo Studio 的四个步骤，全部在本地电脑上完成</div>
+  <div class="row">
+    <div class="box c-blue"><span class="num">STEP 1</span>
+      <div class="ico"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="14" height="14" rx="2"/><path d="m16 10 6-3v10l-6-3"/></svg></div>
+      <b>数据准备</b><p>导入视频或照片，自动抽取清晰帧，再用 COLMAP 算出每张图片拍摄时相机的位置和朝向</p></div>
+    <div class="arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></div>
+    <div class="box c-teal"><span class="num">STEP 2</span>
+      <div class="ico"><svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="3"/><circle cx="16" cy="7" r="2"/><circle cx="14" cy="15" r="4"/><circle cx="6" cy="17" r="2"/></svg></div>
+      <b>场景训练</b><p>用几十万到上百万个“3D 高斯”拟合场景，同时在每一步提取网格并约束高斯（Mesh-in-the-Loop）</p></div>
+    <div class="arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></div>
+    <div class="box c-amber"><span class="num">STEP 3</span>
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></div>
+      <b>场景预览</b><p>在浏览器里实时渲染训练好的高斯场景，任意角度旋转查看，确认重建效果</p></div>
+    <div class="arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></div>
+    <div class="box c-rose"><span class="num">STEP 4</span>
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 2 21 7v10l-9 5-9-5V7z"/><path d="M12 22V12M3 7l9 5 9-5"/></svg></div>
+      <b>模型导出</b><p>提取带颜色的三角网格，裁剪、减面、平滑后导出，可直接用于 Blender、Unity 等软件</p>
+      <div class="out"><span>PLY</span><span>OBJ</span><span>GLB</span><span>STL</span></div></div>
+  </div>
+  <div class="tools"><div>OpenCV · COLMAP 4</div><div></div><div>PyTorch · CUDA 光栅化 · CGAL</div><div></div><div>Gaussian Splats 3D</div><div></div><div>nvdiffrast · Open3D · three.js</div></div>
+  <div class="foot">MILo Studio · github.com/Langjudy/MILo</div>
+</div></body></html>

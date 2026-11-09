@@ -213,3 +213,5 @@ tools/colmap/
 data/
 output/
 output_*.log
+build/
+cache/

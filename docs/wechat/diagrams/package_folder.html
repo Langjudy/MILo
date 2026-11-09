@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><link rel="stylesheet" href="style.css">
+<style>
+  .canvas { width: 1400px; }
+  .win { border: 1px solid var(--line); border-radius: 18px; overflow: hidden; box-shadow: 0 20px 50px rgba(30,40,70,.10); }
+  .bar { background: #f3f5f9; padding: 16px 22px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid var(--line); font-size: 18px; color: var(--ink2); }
+  .bar .path { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 16px; flex: 1; font-family: Consolas, monospace; }
+  table { width: 100%; border-collapse: collapse; font-size: 19px; }
+  th { text-align: left; color: var(--muted); font-weight: 600; font-size: 16px; padding: 12px 24px; border-bottom: 1px solid var(--line); }
+  td { padding: 13px 24px; border-bottom: 1px solid #f0f2f6; vertical-align: middle; }
+  td.n { display: flex; align-items: center; gap: 14px; font-weight: 600; }
+  td.d { color: var(--ink2); }
+  .ic { width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center; flex: none; }
+  .ic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
+  .f { background: #fff4e0; color: #e69a1a; } .s { background: #e6f7f2; color: #16a88a; } .t { background: #eef1ff; color: #4f6bed; }
+  tr.hl td { background: #f2fbf8; }
+  tr.hl td.n { color: #0f8a70; }
+  .badge { font-size: 14px; background: #16a88a; color: #fff; border-radius: 20px; padding: 3px 12px; margin-left: 6px; font-weight: 700; }
+</style></head>
+<body><div class="canvas">
+  <h1>整合包里有什么</h1>
+  <div class="sub">解压即用，所有依赖都在这个文件夹里，不会改动系统环境</div>
+  <div class="win">
+    <div class="bar"><span>📁</span><span class="path">D:\MILo-Studio-win64</span></div>
+    <table>
+      <tr><th style="width:40%">名称</th><th>说明</th></tr>
+      <tr class="hl"><td class="n"><span class="ic s"><svg viewBox="0 0 24 24"><path d="m7 4 13 8-13 8z"/></svg></span>start.bat<span class="badge">双击启动</span></td><td class="d">一键启动 MILo Studio，关闭窗口即全部停止</td></tr>
+      <tr><td class="n"><span class="ic t"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg></span>使用说明.txt</td><td class="d">电脑要求与使用步骤</td></tr>
+      <tr><td class="n"><span class="ic f"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>workspace</td><td class="d">你的项目、训练结果、导出的模型都保存在这里</td></tr>
+      <tr><td class="n"><span class="ic f"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>venv</td><td class="d">Python 3.9 + PyTorch 2.3 + 预编译的 CUDA 模块（支持 RTX 20/30/40）</td></tr>
+      <tr><td class="n"><span class="ic f"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>tools\colmap</td><td class="d">COLMAP 4.2.1（GPU 版），用于计算相机位姿</td></tr>
+      <tr><td class="n"><span class="ic f"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>milo</td><td class="d">MILo 训练与网格提取代码</td></tr>
+      <tr><td class="n"><span class="ic f"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>webui</td><td class="d">MILo Studio 网页界面</td></tr>
+      <tr><td class="n"><span class="ic f"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>cache</td><td class="d">评估指标用到的模型权重，已内置，无需联网下载</td></tr>
+    </table>
+  </div>
+</div></body></html>

@@ -41,9 +41,18 @@ SIGGRAPH Asia 2025 - Journal Track (TOG)<br>
 
 原作者的英文说明（Linux 安装、命令行用法、评测）保留在本节之后，内容未改动。
 
+### 一键整合包（推荐普通用户使用）
+
+整合包已经包含 Python 环境、预编译的 CUDA 模块、COLMAP 和模型权重，**不需要安装 Python、CUDA 或 Visual Studio**。
+
+1. 下载 `MILo-Studio-win64.zip`，解压到一个**纯英文、不含空格**的路径，例如 `D:\MILo-Studio-win64`。
+2. 双击 `start.bat`。
+
+电脑要求：Windows 10/11 64 位；NVIDIA RTX 20 / 30 / 40 系列显卡，显存 8GB 以上（推荐 12GB 以上）；显卡驱动 528 或更高版本。整合包内的 CUDA 模块已针对 sm_75 / 80 / 86 / 89 / 90 预编译，暂不支持 RTX 50 系列。
+
 ### 一键启动
 
-环境装好后，双击项目根目录的 **`start.bat`** 即可。脚本会自动配置编译环境，启动服务，并在浏览器中打开 `http://127.0.0.1:7860`。
+双击项目根目录的 **`start.bat`** 即可。脚本会启动服务，并在浏览器中打开 `http://127.0.0.1:7860`。启动时会检查安装路径、显卡驱动和显卡型号，发现问题会在窗口中给出警告。
 
 - **关闭**：关掉这个黑色命令行窗口，所有服务和正在运行的训练、COLMAP 进程都会一起停止。
 - **换端口**：7860 被占用时，会自动改用下一个空闲端口，实际地址会显示在窗口里。
@@ -59,16 +68,20 @@ SIGGRAPH Asia 2025 - Journal Track (TOG)<br>
 
 所有项目数据都保存在 `workspace/projects/` 下。同一时间只运行一个 GPU 任务，其余任务自动排队。
 
-### 环境要求
+### 从源码安装（开发者）
+
+只有想修改代码或自己打包时才需要这部分；普通用户直接使用上面的整合包即可。
+
+**环境要求**
 
 - Windows 10/11，NVIDIA 显卡（已在 RTX 4060 Ti 16GB 上测试）。显存建议 12GB 以上，“高质量 / 极致”预设对显存要求更高。
 - [Miniconda](https://docs.conda.io/)
 - **CUDA Toolkit 12.2**，安装在默认路径 `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2`
 - **Visual Studio 2022**（Community 即可），安装时需要勾选 **MSVC v142（14.29）生成工具**。CUDA 12.2 的 nvcc 不支持更新的 14.4x 工具集，所以编译时固定使用 14.29。
 
-> `start.bat` 和 `milo_env.bat` 里写死了 VS 2022 Community 和 CUDA 12.2 的安装路径。如果你的安装位置不同，请修改这两个文件开头的路径。
+> `milo_env.bat` 和 `packaging\build_extensions.bat` 里写死了 VS 2022 Community 和 CUDA 12.2 的安装路径。如果你的安装位置不同，请修改这两个文件开头的路径。
 
-### 安装步骤
+**安装步骤**
 
 以下命令都在项目根目录执行。Python 环境建在项目内的 `./venv` 中，不使用全局 Python。
 
@@ -126,6 +139,22 @@ cd ..\submodules\tetra_triangulation
 
 双击 `start.bat`。
 
+**7. 制作整合包（可选）**
+
+```bat
+packaging\build_extensions.bat
+```
+
+这一步会把所有 CUDA 模块按 sm_75 / 80 / 86 / 89 / 90（另带 PTX）重新编译，把 nvdiffrast 的插件预编译进环境，并把 nvdiffrast 和 tetra-nerf 从“可编辑安装”改为普通安装，这样环境移动到其他目录或其他电脑后仍然可用。整个过程大约需要 1 小时。
+
+然后把第一次训练时自动下载的 LPIPS 权重复制到 `cache\torch\hub\checkpoints\`，再执行：
+
+```bash
+./venv/python.exe packaging/make_package.py D:\MILo-Studio-win64 --zip
+```
+
+这会生成约 8GB 的整合包文件夹和 zip。打包时会排除项目数据、训练输出、源码编译产物和截图工具。
+
 ### 关于模型下载
 
 MILo 针对每个场景从零开始优化，不依赖生成式大模型，场景完全来自你拍摄的画面。只有以下几项涉及下载：
@@ -133,20 +162,21 @@ MILo 针对每个场景从零开始优化，不依赖生成式大模型，场景
 | 内容 | 是否必需 | 说明 |
 |---|---|---|
 | COLMAP（约 415MB） | 必需（视频 / 图片输入） | 传统几何算法，用于估计相机位姿，不是神经网络 |
-| VGG16 权重（约 528MB） | 自动下载 | 第一次训练结束时，用于计算 LPIPS 评估指标，缓存在 `~/.cache/torch`，不参与重建 |
+| VGG16 权重（约 528MB） | 整合包已内置 | 训练结束时用于计算 LPIPS 评估指标，不参与重建。`start.bat` 把 `TORCH_HOME` 指向 `cache\torch`；源码安装时第一次训练会自动下载 |
 | Depth-Anything-V2 vitl（约 1.3GB） | 可选 | 只有开启“深度顺序正则化”时才需要，放到 `submodules/Depth-Anything-V2/checkpoints/` |
 
 ### 相对原项目的改动
 
 - `submodules/diff-gaussian-rasterization_gof`：Windows 下去掉 GCC 专用的 `-fno-gnu-unique` 编译选项，并把 `u_int16_t` / `u_int32_t` 改为标准的 `uint16_t` / `uint32_t`。
 - `submodules/tetra_triangulation`：修复了 MSVC 无法编译的写法；新增 `setup_win.py`，用 torch 的扩展构建工具代替 CMake + make。
-- `milo/scene/mesh.py`：Windows 下网格光栅化默认改用 nvdiffrast 的 CUDA 后端。原来的 OpenGL 后端在网格较大时会在 `nvoglv64.dll` 中崩溃。
-- 新增 `webui/`（MILo Studio）、`start.bat`、`milo_env.bat`。
+- `milo/scene/mesh.py`：Windows 下网格光栅化默认改用 nvdiffrast 的 CUDA 后端。原来的 OpenGL 后端在网格较大时会在 `nvoglv64.dll` 中崩溃。如果环境里有预编译的 `nvdiffrast_plugin`，会优先使用它，不再在运行时编译。
+- 新增 `webui/`（MILo Studio）、`start.bat`、`milo_env.bat`，以及 `packaging/`（整合包构建脚本）。
 
 ### 常见问题
 
 - **编译时报 `unsupported Microsoft Visual Studio version`**：说明没有使用 14.29 工具集。请在 Visual Studio Installer 中安装 MSVC v142（14.29），并通过 `milo_env.bat` 或 `start.bat` 运行。
-- **第一次导出网格较慢**：nvdiffrast 第一次使用时需要编译 CUDA 内核，大约 1–2 分钟，之后会使用缓存。
+- **启动时提示“没有检测到 NVIDIA 显卡”或驱动过旧**：请到 NVIDIA 官网安装最新的 Game Ready 或 Studio 驱动（528 或更高版本）。
+- **源码安装时第一次导出较慢**：如果没有运行 `packaging\build_extensions.bat`，nvdiffrast 第一次使用时需要编译 CUDA 内核，大约 1–2 分钟。整合包已经预编译，没有这个问题。
 - **重建结果缺了一部分**：查看“数据准备”页面的时间覆盖图。红色的秒数表示 COLMAP 没能注册这些画面。可以改用“穷举匹配”、提高每秒帧数，或者拍摄时放慢移动速度、避免画面模糊。
 - **导入 Blender 后只看到一堆碎片**：原始网格包含远处的背景，坐标系也和 Blender 不同。导出时开启“自动裁剪”，坐标系选“Z 轴朝上”即可。
 

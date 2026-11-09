@@ -2,6 +2,16 @@ import os
 from typing import List, Union, Tuple, Optional
 import torch
 import nvdiffrast.torch as dr
+
+# Portable Windows package: nvdiffrast's CUDA plugin is precompiled for several GPU
+# architectures (packaging/build_nvdiffrast_plugin.py) so no MSVC/nvcc is needed at
+# runtime. Hand it to nvdiffrast's plugin cache; otherwise nvdiffrast JIT-compiles as usual.
+try:
+    import nvdiffrast_plugin as _nvdr_prebuilt
+    import nvdiffrast.torch.ops as _nvdr_ops
+    _nvdr_ops._cached_plugin.setdefault(False, _nvdr_prebuilt)
+except ImportError:
+    pass
 from scene.cameras import Camera
 from utils.geometry_utils import transform_points_world_to_view
 

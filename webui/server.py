@@ -470,8 +470,32 @@ def free_port(start=7860):
     raise RuntimeError("找不到可用端口")
 
 
+def preflight():
+    """Warn early about the problems a fresh package install usually runs into."""
+    warns = []
+    if not ROOT_DIR.isascii() or " " in ROOT_DIR:
+        warns.append(f"安装路径包含中文或空格：{ROOT_DIR}\n    COLMAP 和训练脚本可能因此出错，建议解压到类似 D:\\MILo-Studio 的纯英文路径。")
+    try:
+        out = subprocess.run(["nvidia-smi", "--query-gpu=name,driver_version,compute_cap", "--format=csv,noheader"],
+                             capture_output=True, text=True, timeout=10, creationflags=0x08000000).stdout.strip()
+        name, drv, cap = [x.strip() for x in out.splitlines()[0].split(",")]
+        if float(drv.split(".")[0]) < 528:
+            warns.append(f"显卡驱动版本 {drv} 过旧，需要 528 或更高版本（支持 CUDA 12.1），请到 NVIDIA 官网更新驱动。")
+        cc = float(cap)
+        if cc < 7.5:
+            warns.append(f"{name}（计算能力 {cap}）低于支持的最低要求 7.5（RTX 20 系列）。")
+        elif cc >= 10.0:
+            warns.append(f"{name}（计算能力 {cap}）是比 RTX 40 更新的架构，本整合包内的 PyTorch 2.3 可能无法在其上运行。")
+    except Exception:
+        warns.append("没有检测到 NVIDIA 显卡或驱动（nvidia-smi 不可用），MILo 需要 NVIDIA 显卡才能运行。")
+    for w in warns:
+        print("[警告] " + w)
+    return warns
+
+
 def main():
     bind_to_job_object()
+    preflight()
     pipelines.recover_interrupted()
     port = free_port(int(os.environ.get("MILO_STUDIO_PORT", 7860)))
     url = f"http://127.0.0.1:{port}/"
