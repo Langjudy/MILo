@@ -215,3 +215,6 @@ output/
 output_*.log
 build/
 cache/
+
+# local drafts (not published)
+docs/wechat/
