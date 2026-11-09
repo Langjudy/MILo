@@ -31,10 +31,10 @@ torch::Tensor py_triangulate(const torch::Tensor &points) {
         points_.size(0),
         reinterpret_cast<float3 *>(points_.data_ptr()));
 
-    if (cells.size() >= (size_t)std::numeric_limits<int>::max) {
+    if (cells.size() >= (size_t)std::numeric_limits<int>::max()) {
         throw Exception("Too many points!");
     }
-    auto cells_out = torch::empty({(long)cells.size(), 4}, torch::dtype(torch::kInt32).device(torch::kCPU));
+    auto cells_out = torch::empty({(int64_t)cells.size(), 4}, torch::dtype(torch::kInt32).device(torch::kCPU));
     memcpy(
         cells_out.data_ptr(),
         reinterpret_cast<void *>(cells.data()),

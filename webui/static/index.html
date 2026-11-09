@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MILo Studio</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3 28 10v12L16 29 4 22V10z' fill='%236c8cff'/%3E%3Cpath d='M16 3v26M4 10l12 7 12-7' stroke='%23fff' stroke-width='1.6' fill='none' opacity='.8'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <script type="importmap">
+    { "imports": { "three": "/static/vendor/three.module.min.js" } }
+  </script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <a class="brand" href="#/">
+        <svg viewBox="0 0 32 32" class="brand-mark"><path d="M16 3 28 10v12L16 29 4 22V10z"/><path d="M16 3v26M4 10l12 7 12-7" class="brand-lines"/></svg>
+        <div><div class="brand-name">MILo Studio</div><div class="brand-sub">高斯泼溅 · 网格重建</div></div>
+      </a>
+
+      <div class="side-project" id="sideProject"></div>
+
+      <nav class="steps" id="steps">
+        <a data-step="data"><span class="num">1</span><span class="txt"><b>数据准备</b><small>视频抽帧 · 相机位姿</small></span><span class="dot"></span></a>
+        <a data-step="train"><span class="num">2</span><span class="txt"><b>场景训练</b><small>参数 · 实时进度</small></span><span class="dot"></span></a>
+        <a data-step="preview"><span class="num">3</span><span class="txt"><b>场景预览</b><small>实时 3D 高斯查看</small></span><span class="dot"></span></a>
+        <a data-step="export"><span class="num">4</span><span class="txt"><b>模型导出</b><small>网格提取 · 样式查看</small></span><span class="dot"></span></a>
+      </nav>
+
+      <div class="side-bottom">
+        <button class="queue-btn" id="queueBtn" title="任务队列">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          <span>任务队列</span><span class="badge" id="queueBadge" hidden>0</span>
+        </button>
+        <div class="gpu" id="gpu">
+          <div class="gpu-head"><span class="gpu-name">GPU</span><span class="gpu-temp"></span></div>
+          <div class="meter"><i style="width:0"></i></div>
+          <div class="gpu-foot"><span class="gpu-mem">—</span><span class="gpu-util"></span></div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar" id="topbar"></header>
+      <section class="view" id="view"></section>
+    </main>
+  </div>
+
+  <div class="drawer" id="drawer" hidden>
+    <div class="drawer-head"><h3>任务队列</h3><button class="icon-btn" data-close-drawer>✕</button></div>
+    <div class="drawer-body" id="drawerBody"></div>
+  </div>
+  <div class="modal-wrap" id="modal" hidden></div>
+  <div class="toasts" id="toasts"></div>
+
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>

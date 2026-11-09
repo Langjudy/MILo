@@ -1,3 +1,4 @@
+import os
 from typing import List, Union, Tuple, Optional
 import torch
 import nvdiffrast.torch as dr
@@ -169,7 +170,9 @@ class MeshRasterizer(torch.nn.Module):
         self, 
         cameras:Union[List[Camera], Camera]=None,
         raster_settings:RasterizationSettings=None,
-        use_opengl=True,
+        # The OpenGL backend crashes inside nvoglv64.dll on Windows for large meshes,
+        # so default to nvdiffrast's CUDA backend there.
+        use_opengl=(os.name != "nt"),
     ):
         super().__init__()
         
