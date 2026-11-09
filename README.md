@@ -32,6 +32,124 @@ SIGGRAPH Asia 2025 - Journal Track (TOG)<br>
 ![Teaser image](assets/teaser.png)
 </div>
 
+## Windows 原生部署与 MILo Studio（中文说明）
+
+本分支在原项目基础上增加了两部分内容：
+
+1. **Windows 原生支持**：修复了几个只能在 Linux 下编译的模块，不需要 WSL。
+2. **MILo Studio**：一个本地网页界面。从上传视频或照片开始，依次完成抽帧、相机位姿估计、训练、三维预览、网格导出，全程有实时进度。
+
+原作者的英文说明（Linux 安装、命令行用法、评测）保留在本节之后，内容未改动。
+
+### 一键启动
+
+环境装好后，双击项目根目录的 **`start.bat`** 即可。脚本会自动配置编译环境，启动服务，并在浏览器中打开 `http://127.0.0.1:7860`。
+
+- **关闭**：关掉这个黑色命令行窗口，所有服务和正在运行的训练、COLMAP 进程都会一起停止。
+- **换端口**：7860 被占用时，会自动改用下一个空闲端口，实际地址会显示在窗口里。
+
+### 使用流程
+
+| 步骤 | 内容 |
+|---|---|
+| **1 数据准备** | 上传视频，或者上传图片、整个文件夹，也可以直接导入已有的 COLMAP 数据集（需要包含 `images/` 和 `sparse/0/`）。<br>视频可以按“每秒帧数”或“总帧数”抽帧：视频在时间上被等分，每段取最清晰的一帧，保证每一秒都有画面。<br>随后由 COLMAP 估计相机位姿。完成后会显示时间覆盖图，标出哪些秒的画面没能进入重建。 |
+| **2 场景训练** | 有快速预览、标准、高质量、极致四档预设，也可以在高级参数里调整 MILo 的全部训练选项。<br>训练时实时显示迭代数、速度、剩余时间、损失曲线和渲染快照。也可以导入以前用命令行训练好的结果。 |
+| **3 场景预览** | 在浏览器中实时查看训练得到的 3D 高斯场景，可以跳转到训练相机的视角，也可以截图。<br>可以把某个训练结果设为默认模型，导出时会自动选用它。 |
+| **4 模型导出** | 提取方法有三种：SDF 精细化、高斯积分、规则 TSDF。<br>后处理包括自动裁剪、坐标系转换（Z 朝上 / Y 朝上）、去碎片、平滑、减面。输出格式支持 PLY / OBJ / GLB / STL。<br>导出后可以在网页里切换原色、白模、法线、高度、线框等样式查看模型。<br>同一模型提取出的原始网格会被缓存，之后只改后处理参数可以在几十秒内重新导出。 |
+
+所有项目数据都保存在 `workspace/projects/` 下。同一时间只运行一个 GPU 任务，其余任务自动排队。
+
+### 环境要求
+
+- Windows 10/11，NVIDIA 显卡（已在 RTX 4060 Ti 16GB 上测试）。显存建议 12GB 以上，“高质量 / 极致”预设对显存要求更高。
+- [Miniconda](https://docs.conda.io/)
+- **CUDA Toolkit 12.2**，安装在默认路径 `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2`
+- **Visual Studio 2022**（Community 即可），安装时需要勾选 **MSVC v142（14.29）生成工具**。CUDA 12.2 的 nvcc 不支持更新的 14.4x 工具集，所以编译时固定使用 14.29。
+
+> `start.bat` 和 `milo_env.bat` 里写死了 VS 2022 Community 和 CUDA 12.2 的安装路径。如果你的安装位置不同，请修改这两个文件开头的路径。
+
+### 安装步骤
+
+以下命令都在项目根目录执行。Python 环境建在项目内的 `./venv` 中，不使用全局 Python。
+
+**1. 创建环境并安装 PyTorch 和依赖**
+
+```bash
+conda create -p ./venv python=3.9 -y
+./venv/python.exe -m pip install torch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 --index-url https://download.pytorch.org/whl/cu121
+./venv/python.exe -m pip install -r requirements.txt ninja setuptools==69.5.1 wheel pyyaml matplotlib fastapi==0.115.6 uvicorn==0.32.1 python-multipart==0.0.20
+./venv/python.exe -m pip install "numpy<2"
+```
+
+numpy 必须保持在 1.x，因为 torch 2.3.1 是基于 numpy 1.x 编译的。
+
+**2. 拉取子模块**（`.gitmodules` 里是 SSH 地址，这里改用 HTTPS）
+
+```bash
+git -c url."https://github.com/".insteadOf="git@github.com:" submodule update --init --recursive
+```
+
+**3. 编译 CUDA 扩展**
+
+双击 `milo_env.bat`，打开一个已配置好 MSVC 和 CUDA 的命令行窗口（当前目录为 `milo\`），在里面依次执行：
+
+```bat
+..\venv\python.exe -m pip install --no-build-isolation ..\submodules\simple-knn
+..\venv\python.exe -m pip install --no-build-isolation ..\submodules\fused-ssim
+..\venv\python.exe -m pip install --no-build-isolation ..\submodules\diff-gaussian-rasterization
+..\venv\python.exe -m pip install --no-build-isolation ..\submodules\diff-gaussian-rasterization_ms
+..\venv\python.exe -m pip install --no-build-isolation ..\submodules\diff-gaussian-rasterization_gof
+..\venv\python.exe -m pip install --no-build-isolation --no-deps -e ..\submodules\nvdiffrast
+```
+
+**4. 编译 Delaunay 三角化模块（CGAL）**
+
+先把 CGAL 装进项目环境：
+
+```bash
+C:\Users\<你的用户名>\miniconda3\Scripts\conda install -p ./venv -c conda-forge cgal-cpp gmp mpfr -y
+```
+
+然后在 `milo_env.bat` 打开的窗口中执行：
+
+```bat
+cd ..\submodules\tetra_triangulation
+..\..\venv\python.exe setup_win.py build_ext --inplace
+..\..\venv\python.exe -m pip install --no-build-isolation --no-deps -e .
+```
+
+**5. 下载 COLMAP**（处理视频或图片时必需）
+
+从 [COLMAP Releases](https://github.com/colmap/colmap/releases) 下载 `colmap-x64-windows-cuda.zip`（已测试 4.2.1 版），解压后保证 `tools\colmap\bin\colmap.exe` 存在。
+
+**6. 启动**
+
+双击 `start.bat`。
+
+### 关于模型下载
+
+MILo 针对每个场景从零开始优化，不依赖生成式大模型，场景完全来自你拍摄的画面。只有以下几项涉及下载：
+
+| 内容 | 是否必需 | 说明 |
+|---|---|---|
+| COLMAP（约 415MB） | 必需（视频 / 图片输入） | 传统几何算法，用于估计相机位姿，不是神经网络 |
+| VGG16 权重（约 528MB） | 自动下载 | 第一次训练结束时，用于计算 LPIPS 评估指标，缓存在 `~/.cache/torch`，不参与重建 |
+| Depth-Anything-V2 vitl（约 1.3GB） | 可选 | 只有开启“深度顺序正则化”时才需要，放到 `submodules/Depth-Anything-V2/checkpoints/` |
+
+### 相对原项目的改动
+
+- `submodules/diff-gaussian-rasterization_gof`：Windows 下去掉 GCC 专用的 `-fno-gnu-unique` 编译选项，并把 `u_int16_t` / `u_int32_t` 改为标准的 `uint16_t` / `uint32_t`。
+- `submodules/tetra_triangulation`：修复了 MSVC 无法编译的写法；新增 `setup_win.py`，用 torch 的扩展构建工具代替 CMake + make。
+- `milo/scene/mesh.py`：Windows 下网格光栅化默认改用 nvdiffrast 的 CUDA 后端。原来的 OpenGL 后端在网格较大时会在 `nvoglv64.dll` 中崩溃。
+- 新增 `webui/`（MILo Studio）、`start.bat`、`milo_env.bat`。
+
+### 常见问题
+
+- **编译时报 `unsupported Microsoft Visual Studio version`**：说明没有使用 14.29 工具集。请在 Visual Studio Installer 中安装 MSVC v142（14.29），并通过 `milo_env.bat` 或 `start.bat` 运行。
+- **第一次导出网格较慢**：nvdiffrast 第一次使用时需要编译 CUDA 内核，大约 1–2 分钟，之后会使用缓存。
+- **重建结果缺了一部分**：查看“数据准备”页面的时间覆盖图。红色的秒数表示 COLMAP 没能注册这些画面。可以改用“穷举匹配”、提高每秒帧数，或者拍摄时放慢移动速度、避免画面模糊。
+- **导入 Blender 后只看到一堆碎片**：原始网格包含远处的背景，坐标系也和 Blender 不同。导出时开启“自动裁剪”，坐标系选“Z 轴朝上”即可。
+
 ## Abstract
 
 _Our method introduces a novel differentiable mesh extraction framework that operates during the optimization of 3D Gaussian Splatting representations. At every training iteration, we differentiably extract a mesh—including both vertex locations and connectivity—only from Gaussian parameters. This enables gradient flow from the mesh to Gaussians, allowing us to promote bidirectional consistency between volumetric (Gaussians) and surface (extracted mesh) representations. This approach guides Gaussians toward configurations better suited for surface reconstruction, resulting in higher quality meshes with significantly fewer vertices. Our framework can be plugged into any Gaussian splatting representation, increasing performance while generating an order of magnitude fewer mesh vertices. MILo makes the reconstructions more practical for downstream applications like physics simulations and animation._
